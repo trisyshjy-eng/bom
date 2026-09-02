@@ -27,6 +27,9 @@ export default async function NavBar() {
             <Link href="/products/new" className="hover:text-neutral-900">
               신규 등록
             </Link>
+            <Link href="/products/import" className="hover:text-neutral-900">
+              엑셀 업로드
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm text-neutral-500">
