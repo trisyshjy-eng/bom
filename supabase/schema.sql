@@ -45,6 +45,11 @@ create table if not exists products (
   box_weight numeric(14,2) check (box_weight is null or box_weight > 0),
   box_count integer check (box_count is null or box_count > 0),
   usd_exchange_rate numeric(14,4) check (usd_exchange_rate is null or usd_exchange_rate > 0),
+  -- 매입가는 1box 기준 단가. 박스수량을 입력하면 총매입가를 자동 계산한다 (미입력 시 매입가와 동일).
+  box_quantity integer check (box_quantity is null or box_quantity > 0),
+  total_purchase_price numeric(16,2) generated always as (
+    purchase_price * coalesce(box_quantity, 1)
+  ) stored,
   preserved_weight numeric(14,2) generated always as (
     case when yield_rate is null then purchase_weight
          else round(purchase_weight * yield_rate / 100, 2)

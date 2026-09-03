@@ -91,6 +91,14 @@ export default async function ProductDetailPage({
       <div className="rounded-lg border border-neutral-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
         <InfoItem label={labels.purchasePriceLabel} value={`${formatKRW(product.purchase_price)} 원`} />
         <InfoItem label={labels.purchaseWeightLabel} value={`${formatKRW(product.purchase_weight)} g`} />
+        {product.purchase_type === "국내구매" && (
+          <InfoItem label="박스수량" value={product.box_quantity !== null ? formatKRW(product.box_quantity) : "1(기본값)"} />
+        )}
+        <InfoItem
+          label="총매입가"
+          value={`${formatKRW(product.total_purchase_price)} 원`}
+          highlight
+        />
         <InfoItem
           label={labels.yieldRateLabel}
           value={product.yield_rate !== null ? `${product.yield_rate}%` : "-"}

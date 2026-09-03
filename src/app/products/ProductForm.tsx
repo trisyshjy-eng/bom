@@ -8,6 +8,7 @@ import {
   calcUnitCostPer100g,
   calcOverseasTotalPrice,
   calcOverseasTotalWeight,
+  calcTotalPurchasePrice,
   formatKRW,
   formatUnitCost,
 } from "@/lib/calc";
@@ -31,6 +32,7 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
   const [productName, setProductName] = useState(product?.product_name ?? "");
   const [purchasePrice, setPurchasePrice] = useState(product?.purchase_price?.toString() ?? "");
   const [purchaseWeight, setPurchaseWeight] = useState(product?.purchase_weight?.toString() ?? "");
+  const [boxQuantity, setBoxQuantity] = useState(product?.box_quantity?.toString() ?? "");
   const [yieldRate, setYieldRate] = useState(product?.yield_rate?.toString() ?? "");
 
   const [purchaseType, setPurchaseType] = useState<PurchaseType>(product?.purchase_type ?? "국내구매");
@@ -90,6 +92,14 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
     const y = yieldRate === "" ? null : Number(yieldRate);
     return calcUnitCostPer100g(effectivePrice, effectiveWeight, y);
   }, [effectivePrice, effectiveWeight, yieldRate]);
+
+  const previewTotalPurchasePrice = useMemo(() => {
+    const p = Number(purchasePrice);
+    if (Number.isNaN(p)) return null;
+    const qty = boxQuantity === "" ? null : Number(boxQuantity);
+    if (qty !== null && (Number.isNaN(qty) || qty <= 0)) return null;
+    return calcTotalPurchasePrice(p, qty);
+  }, [purchasePrice, boxQuantity]);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -302,6 +312,18 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
                 className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
               />
             </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-neutral-700">박스수량</label>
+              <input
+                type="number"
+                step="1"
+                name="box_quantity"
+                value={boxQuantity}
+                onChange={(e) => setBoxQuantity(e.target.value)}
+                placeholder="미입력 시 1로 계산"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              />
+            </div>
           </>
         )}
 
@@ -337,6 +359,15 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
               </div>
             </div>
           </>
+        )}
+        {!isOverseas && (
+          <div>
+            <div className="text-xs text-neutral-500">총매입가 (자동계산)</div>
+            <div className="text-lg font-semibold text-neutral-900">
+              {previewTotalPurchasePrice !== null ? `${formatKRW(previewTotalPurchasePrice)} 원` : "-"}
+            </div>
+            <div className="text-[11px] text-neutral-400 mt-0.5">{labels.purchasePriceLabel} × 박스수량</div>
+          </div>
         )}
         <div>
           <div className="text-xs text-neutral-500">보존중량 (자동계산)</div>

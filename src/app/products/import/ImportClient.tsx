@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
-import { formatKRW } from "@/lib/calc";
+import { formatKRW, calcTotalPurchasePrice } from "@/lib/calc";
 import {
   previewImport,
   commitImport,
@@ -124,8 +124,10 @@ export default function ImportClient() {
                     <th className="px-3 py-2 font-medium">거래처</th>
                     <th className="px-3 py-2 font-medium">제품명</th>
                     <th className="px-3 py-2 font-medium">구매유형</th>
-                    <th className="px-3 py-2 font-medium text-right">매입가</th>
+                    <th className="px-3 py-2 font-medium text-right">매입가(1box)</th>
                     <th className="px-3 py-2 font-medium text-right">매입중량</th>
+                    <th className="px-3 py-2 font-medium text-right">박스수량</th>
+                    <th className="px-3 py-2 font-medium text-right">총매입가</th>
                     <th className="px-3 py-2 font-medium">상태</th>
                   </tr>
                 </thead>
@@ -150,6 +152,12 @@ export default function ImportClient() {
                       </td>
                       <td className="px-3 py-2 text-right whitespace-nowrap">
                         {formatKRW(r.purchase_weight)} g
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        {r.purchase_type === "국내구매" ? formatKRW(r.box_quantity) : "-"}
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap font-medium">
+                        {formatKRW(calcTotalPurchasePrice(r.purchase_price, r.box_quantity))} 원
                       </td>
                       <td className="px-3 py-2">{r.status}</td>
                     </tr>

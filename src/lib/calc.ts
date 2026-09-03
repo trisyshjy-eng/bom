@@ -33,6 +33,15 @@ export function calcOverseasTotalWeight(boxWeight: number, boxCount: number): nu
   return Math.round(boxWeight * boxCount * 100) / 100;
 }
 
+// 매입가는 1box 기준 단가이므로 박스수량을 곱해 총매입가를 계산한다 (박스수량 미입력 시 매입가와 동일).
+export function calcTotalPurchasePrice(
+  purchasePrice: number,
+  boxQuantity: number | null
+): number {
+  const qty = boxQuantity === null || Number.isNaN(boxQuantity) || boxQuantity <= 0 ? 1 : boxQuantity;
+  return Math.round(purchasePrice * qty * 100) / 100;
+}
+
 export function calcPriceDiff(
   changedPrice: number,
   previousPrice: number | null

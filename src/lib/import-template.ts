@@ -16,6 +16,7 @@ export type ImportField =
   | "purchase_type"
   | "purchase_price"
   | "purchase_weight"
+  | "box_quantity"
   | "contract_unit_price"
   | "box_weight"
   | "box_count"
@@ -39,8 +40,9 @@ export const IMPORT_COLUMNS: ImportColumn[] = [
   { header: "사이즈", field: "size", required: false, example: "M" },
   { header: "등급", field: "grade", required: false, example: "A" },
   { header: "구매유형", field: "purchase_type", required: false, example: "국내구매" },
-  { header: "매입가(원)", field: "purchase_price", required: true, example: 50000 },
-  { header: "매입중량(g)", field: "purchase_weight", required: true, example: 10000 },
+  { header: "매입가(1box, 원)", field: "purchase_price", required: true, example: 50000 },
+  { header: "매입중량(1box, g)", field: "purchase_weight", required: true, example: 10000 },
+  { header: "박스수량", field: "box_quantity", required: false, example: 1 },
   { header: "계약단가", field: "contract_unit_price", required: false, example: "" },
   { header: "1box당중량(g)", field: "box_weight", required: false, example: "" },
   { header: "총박스수량", field: "box_count", required: false, example: "" },
@@ -61,6 +63,7 @@ export interface ParsedImportRow {
   purchase_type: string;
   purchase_price: string;
   purchase_weight: string;
+  box_quantity: string;
   contract_unit_price: string;
   box_weight: string;
   box_count: string;
@@ -82,6 +85,7 @@ export interface ValidatedImportRow {
   purchase_type: PurchaseType;
   purchase_price: number;
   purchase_weight: number;
+  box_quantity: number | null;
   contract_unit_price: number | null;
   box_weight: number | null;
   box_count: number | null;
@@ -118,6 +122,7 @@ export function validateRow(
 
   let purchasePrice = 0;
   let purchaseWeight = 0;
+  let boxQuantity: number | null = null;
   let contractUnitPrice: number | null = null;
   let boxWeight: number | null = null;
   let boxCount: number | null = null;
@@ -150,6 +155,12 @@ export function validateRow(
     purchaseWeight = Number(raw.purchase_weight);
     if (raw.purchase_weight.trim() === "" || Number.isNaN(purchaseWeight) || purchaseWeight <= 0)
       errors.push("매입중량이 올바른 숫자가 아닙니다");
+
+    if (raw.box_quantity.trim() !== "") {
+      boxQuantity = Number(raw.box_quantity);
+      if (Number.isNaN(boxQuantity) || boxQuantity <= 0 || !Number.isInteger(boxQuantity))
+        errors.push("박스수량은 1 이상의 정수여야 합니다");
+    }
   }
 
   let yieldRate: number | null = null;
@@ -179,6 +190,7 @@ export function validateRow(
       purchase_type: purchaseType,
       purchase_price: purchasePrice,
       purchase_weight: purchaseWeight,
+      box_quantity: boxQuantity,
       contract_unit_price: contractUnitPrice,
       box_weight: boxWeight,
       box_count: boxCount,

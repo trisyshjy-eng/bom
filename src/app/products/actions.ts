@@ -82,6 +82,7 @@ export async function saveProduct(
   let boxWeight: number | null = null;
   let boxCount: number | null = null;
   let usdExchangeRate: number | null = null;
+  let boxQuantity: number | null = null;
 
   if (purchaseType === "해외직구매") {
     contractUnitPrice = Number(formData.get("contract_unit_price") ?? "");
@@ -110,6 +111,13 @@ export async function saveProduct(
       return { error: "매입가를 올바르게 입력하세요." };
     if (Number.isNaN(purchaseWeight) || purchaseWeight <= 0)
       return { error: "매입중량을 올바르게 입력하세요." };
+
+    const boxQuantityRaw = String(formData.get("box_quantity") ?? "").trim();
+    if (boxQuantityRaw !== "") {
+      boxQuantity = Number(boxQuantityRaw);
+      if (Number.isNaN(boxQuantity) || boxQuantity <= 0 || !Number.isInteger(boxQuantity))
+        return { error: "박스수량은 1 이상의 정수여야 합니다." };
+    }
   }
 
   const { id: resolvedSupplierId, error: supplierError } = await resolveSupplierId(
@@ -131,6 +139,7 @@ export async function saveProduct(
     grade,
     purchase_price: purchasePrice,
     purchase_weight: purchaseWeight,
+    box_quantity: boxQuantity,
     yield_rate: yieldRate,
     purchase_type: purchaseType,
     contract_unit_price: contractUnitPrice,
