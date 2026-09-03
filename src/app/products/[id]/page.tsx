@@ -73,6 +73,20 @@ export default async function ProductDetailPage({
         <InfoItem label="등급" value={product.grade ?? "-"} />
       </div>
 
+      {product.product_name === "쭈꾸미" && (
+        <div className="rounded-lg border border-neutral-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <InfoItem label="구매유형" value={product.purchase_type} />
+          {product.purchase_type === "해외직구매" && (
+            <>
+              <InfoItem label="계약단가" value={formatUnitCost(product.contract_unit_price)} />
+              <InfoItem label="1box당 중량" value={`${formatKRW(product.box_weight)} g`} />
+              <InfoItem label="총박스수량" value={formatKRW(product.box_count)} />
+              <InfoItem label="달러구매가" value={formatUnitCost(product.usd_exchange_rate)} />
+            </>
+          )}
+        </div>
+      )}
+
       <div className="rounded-lg border border-neutral-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
         <InfoItem label={labels.purchasePriceLabel} value={`${formatKRW(product.purchase_price)} 원`} />
         <InfoItem label={labels.purchaseWeightLabel} value={`${formatKRW(product.purchase_weight)} g`} />

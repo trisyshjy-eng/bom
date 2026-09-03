@@ -39,6 +39,12 @@ create table if not exists products (
   purchase_price numeric(14,2) not null check (purchase_price >= 0),
   purchase_weight numeric(14,2) not null check (purchase_weight > 0),
   yield_rate numeric(5,2) check (yield_rate is null or (yield_rate > 0 and yield_rate <= 100)),
+  -- 쭈꾸미 해외직구매 전용: 국내구매는 기본값 그대로 두고 매입가/매입중량을 직접 입력한다.
+  purchase_type text not null default '국내구매' check (purchase_type in ('국내구매', '해외직구매')),
+  contract_unit_price numeric(14,2) check (contract_unit_price is null or contract_unit_price >= 0),
+  box_weight numeric(14,2) check (box_weight is null or box_weight > 0),
+  box_count integer check (box_count is null or box_count > 0),
+  usd_exchange_rate numeric(14,4) check (usd_exchange_rate is null or usd_exchange_rate > 0),
   preserved_weight numeric(14,2) generated always as (
     case when yield_rate is null then purchase_weight
          else round(purchase_weight * yield_rate / 100, 2)

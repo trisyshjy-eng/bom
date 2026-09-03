@@ -3,10 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { calcOverseasTotalPrice, calcOverseasTotalWeight } from "@/lib/calc";
+import type { PurchaseType } from "@/lib/types";
 
 export interface ProductFormState {
   error: string | null;
 }
+
+const OVERSEAS_PRODUCT_NAME = "쭈꾸미";
 
 async function resolveSupplierId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -57,24 +61,57 @@ export async function saveProduct(
   const spec = String(formData.get("spec") ?? "").trim() || null;
   const size = String(formData.get("size") ?? "").trim() || null;
   const grade = String(formData.get("grade") ?? "").trim() || null;
-  const purchasePriceRaw = String(formData.get("purchase_price") ?? "");
-  const purchaseWeightRaw = String(formData.get("purchase_weight") ?? "");
   const yieldRateRaw = String(formData.get("yield_rate") ?? "").trim();
   const status = String(formData.get("status") ?? "거래중");
+  const purchaseTypeRaw = String(formData.get("purchase_type") ?? "국내구매");
 
   if (!categoryId) return { error: "카테고리를 선택하세요." };
   if (!productName) return { error: "제품명을 입력하세요." };
 
-  const purchasePrice = Number(purchasePriceRaw);
-  const purchaseWeight = Number(purchaseWeightRaw);
-  const yieldRate = yieldRateRaw === "" ? null : Number(yieldRateRaw);
+  const purchaseType: PurchaseType = purchaseTypeRaw === "해외직구매" ? "해외직구매" : "국내구매";
+  if (purchaseType === "해외직구매" && productName !== OVERSEAS_PRODUCT_NAME) {
+    return { error: `해외직구매는 '${OVERSEAS_PRODUCT_NAME}' 제품만 등록할 수 있습니다.` };
+  }
 
-  if (Number.isNaN(purchasePrice) || purchasePrice < 0)
-    return { error: "매입가를 올바르게 입력하세요." };
-  if (Number.isNaN(purchaseWeight) || purchaseWeight <= 0)
-    return { error: "매입중량을 올바르게 입력하세요." };
+  const yieldRate = yieldRateRaw === "" ? null : Number(yieldRateRaw);
   if (yieldRate !== null && (Number.isNaN(yieldRate) || yieldRate <= 0 || yieldRate > 100))
     return { error: "수율/보존율은 0~100 사이 값이어야 합니다." };
+
+  let purchasePrice: number;
+  let purchaseWeight: number;
+  let contractUnitPrice: number | null = null;
+  let boxWeight: number | null = null;
+  let boxCount: number | null = null;
+  let usdExchangeRate: number | null = null;
+
+  if (purchaseType === "해외직구매") {
+    contractUnitPrice = Number(formData.get("contract_unit_price") ?? "");
+    boxWeight = Number(formData.get("box_weight") ?? "");
+    boxCount = Number(formData.get("box_count") ?? "");
+    usdExchangeRate = Number(formData.get("usd_exchange_rate") ?? "");
+
+    if (Number.isNaN(contractUnitPrice) || contractUnitPrice < 0)
+      return { error: "계약단가를 올바르게 입력하세요." };
+    if (Number.isNaN(boxWeight) || boxWeight <= 0)
+      return { error: "1box당 중량을 올바르게 입력하세요." };
+    if (Number.isNaN(boxCount) || boxCount <= 0)
+      return { error: "총박스수량을 올바르게 입력하세요." };
+    if (Number.isNaN(usdExchangeRate) || usdExchangeRate <= 0)
+      return { error: "달러구매가를 올바르게 입력하세요." };
+
+    purchaseWeight = calcOverseasTotalWeight(boxWeight, boxCount);
+    purchasePrice = calcOverseasTotalPrice(contractUnitPrice, boxWeight, boxCount, usdExchangeRate);
+  } else {
+    const purchasePriceRaw = String(formData.get("purchase_price") ?? "");
+    const purchaseWeightRaw = String(formData.get("purchase_weight") ?? "");
+    purchasePrice = Number(purchasePriceRaw);
+    purchaseWeight = Number(purchaseWeightRaw);
+
+    if (Number.isNaN(purchasePrice) || purchasePrice < 0)
+      return { error: "매입가를 올바르게 입력하세요." };
+    if (Number.isNaN(purchaseWeight) || purchaseWeight <= 0)
+      return { error: "매입중량을 올바르게 입력하세요." };
+  }
 
   const { id: resolvedSupplierId, error: supplierError } = await resolveSupplierId(
     supabase,
@@ -96,6 +133,11 @@ export async function saveProduct(
     purchase_price: purchasePrice,
     purchase_weight: purchaseWeight,
     yield_rate: yieldRate,
+    purchase_type: purchaseType,
+    contract_unit_price: contractUnitPrice,
+    box_weight: boxWeight,
+    box_count: boxCount,
+    usd_exchange_rate: usdExchangeRate,
     status,
     last_editor: editorLabel,
   };

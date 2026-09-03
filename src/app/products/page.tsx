@@ -245,8 +245,13 @@ export default async function ProductsPage({
               <th className="px-4 py-2 font-medium">특성</th>
               <th className="px-4 py-2 font-medium">원물사이즈</th>
               <th className="px-4 py-2 font-medium">등급</th>
+              <th className="px-4 py-2 font-medium">구매유형</th>
               <th className="px-4 py-2 font-medium text-right">매입가</th>
               <th className="px-4 py-2 font-medium text-right">매입중량</th>
+              <th className="px-4 py-2 font-medium text-right">계약단가</th>
+              <th className="px-4 py-2 font-medium text-right">1box당중량</th>
+              <th className="px-4 py-2 font-medium text-right">총박스수량</th>
+              <th className="px-4 py-2 font-medium text-right">달러구매가</th>
               <th className="px-4 py-2 font-medium text-right">수율</th>
               <th className="px-4 py-2 font-medium text-right">보존중량</th>
               <th className="px-4 py-2 font-medium text-right">100g당 원가</th>
@@ -262,7 +267,7 @@ export default async function ProductsPage({
           <tbody>
             {(products ?? []).length === 0 && (
               <tr>
-                <td colSpan={19} className="px-4 py-10 text-center text-neutral-400">
+                <td colSpan={24} className="px-4 py-10 text-center text-neutral-400">
                   조건에 맞는 원물/제품이 없습니다.
                 </td>
               </tr>
@@ -292,8 +297,35 @@ export default async function ProductsPage({
                   <td className="px-4 py-2 text-neutral-600">{p.spec ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.size ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
+                  <td className="px-4 py-2">
+                    {p.product_name === "쭈꾸미" ? (
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          p.purchase_type === "해외직구매"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-neutral-100 text-neutral-600"
+                        }`}
+                      >
+                        {p.purchase_type}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.purchase_price)} 원</td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.purchase_weight)} g</td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {p.purchase_type === "해외직구매" ? formatUnitCost(p.contract_unit_price) : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {p.purchase_type === "해외직구매" ? `${formatKRW(p.box_weight)} g` : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {p.purchase_type === "해외직구매" ? formatKRW(p.box_count) : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {p.purchase_type === "해외직구매" ? formatUnitCost(p.usd_exchange_rate) : "-"}
+                  </td>
                   <td className="px-4 py-2 text-right">{p.yield_rate !== null ? `${p.yield_rate}%` : "-"}</td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.preserved_weight)} g</td>
                   <td className="px-4 py-2 text-right font-medium">{formatUnitCost(p.unit_cost_per_100g)} 원</td>
@@ -351,7 +383,8 @@ export default async function ProductsPage({
       <p className="text-xs text-neutral-400">
         금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다. 이전단가/변동단가/상승단가는
         최근 매입가 변동 시점의 100g당 단가 기준이며, 변동차액은 매입가(원) 자체의 증감액입니다. 변동 이력이 없는 제품은
-        &quot;-&quot;로 표시됩니다.
+        &quot;-&quot;로 표시됩니다. 쭈꾸미 해외직구매의 경우 매입가/매입중량은 계약단가×1box당중량×총박스수량×달러구매가로
+        자동 계산된 값입니다.
       </p>
     </div>
   );

@@ -19,6 +19,20 @@ export function calcUnitCostPer100g(
   return Math.round((purchasePrice / preservedWeight) * 100 * 100) / 100;
 }
 
+// 쭈꾸미 해외직구매 전용: 계약단가 × 1box당중량 × 총박스수량 × 달러구매가(환율)
+export function calcOverseasTotalPrice(
+  contractUnitPrice: number,
+  boxWeight: number,
+  boxCount: number,
+  usdExchangeRate: number
+): number {
+  return Math.round(contractUnitPrice * boxWeight * boxCount * usdExchangeRate * 100) / 100;
+}
+
+export function calcOverseasTotalWeight(boxWeight: number, boxCount: number): number {
+  return Math.round(boxWeight * boxCount * 100) / 100;
+}
+
 export function calcPriceDiff(
   changedPrice: number,
   previousPrice: number | null

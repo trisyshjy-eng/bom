@@ -1,4 +1,5 @@
 export type ProductStatus = "거래중" | "거래중단";
+export type PurchaseType = "국내구매" | "해외직구매";
 
 export interface Category {
   id: string;
@@ -27,6 +28,11 @@ export interface Product {
   yield_rate: number | null;
   preserved_weight: number;
   unit_cost_per_100g: number | null;
+  purchase_type: PurchaseType;
+  contract_unit_price: number | null;
+  box_weight: number | null;
+  box_count: number | null;
+  usd_exchange_rate: number | null;
   status: ProductStatus;
   last_editor: string | null;
   updated_at: string;
