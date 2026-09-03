@@ -36,3 +36,17 @@ export function formatUnitCost(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "-";
   return value.toFixed(2);
 }
+
+export function formatSignedKRW(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
+  if (value === 0) return formatKRW(0);
+  const formatted = formatKRW(Math.abs(value));
+  return value > 0 ? `+${formatted}` : `-${formatted}`;
+}
+
+export function formatSignedUnitCost(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
+  if (value === 0) return formatUnitCost(0);
+  const formatted = formatUnitCost(Math.abs(value));
+  return value > 0 ? `+${formatted}` : `-${formatted}`;
+}

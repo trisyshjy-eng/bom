@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/login/actions";
+import { isAdminEmail } from "@/lib/admin-auth";
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -30,6 +31,11 @@ export default async function NavBar() {
             <Link href="/products/import" className="hover:text-neutral-900">
               엑셀 업로드
             </Link>
+            {isAdminEmail(user.email) && (
+              <Link href="/admin/users" className="hover:text-neutral-900">
+                계정 관리
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm text-neutral-500">

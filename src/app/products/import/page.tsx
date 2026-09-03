@@ -1,8 +1,15 @@
+import Link from "next/link";
 import ImportClient from "./ImportClient";
 
 export default function ImportPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <Link
+        href="/products"
+        className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-800"
+      >
+        ← 목록으로
+      </Link>
       <div>
         <h1 className="text-xl font-semibold text-neutral-900">엑셀/CSV 일괄 업로드</h1>
         <p className="text-sm text-neutral-500 mt-1">

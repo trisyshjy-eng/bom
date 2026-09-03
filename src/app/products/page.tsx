@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { formatKRW, formatUnitCost } from "@/lib/calc";
+import {
+  calcUnitCostPer100g,
+  formatKRW,
+  formatUnitCost,
+  formatSignedKRW,
+  formatSignedUnitCost,
+} from "@/lib/calc";
+import type { PriceHistory } from "@/lib/types";
 
 interface SearchParams {
   category?: string;
@@ -11,6 +18,8 @@ interface SearchParams {
   status?: string;
   sort?: string;
   recentDays?: string;
+  yieldMin?: string;
+  yieldMax?: string;
 }
 
 export default async function ProductsPage({
@@ -36,21 +45,64 @@ export default async function ProductsPage({
   if (sp.origin) query = query.ilike("origin", `%${sp.origin}%`);
   if (sp.grade) query = query.ilike("grade", `%${sp.grade}%`);
   if (sp.status) query = query.eq("status", sp.status);
+  if (sp.yieldMin) query = query.gte("yield_rate", Number(sp.yieldMin));
+  if (sp.yieldMax) query = query.lte("yield_rate", Number(sp.yieldMax));
   if (sp.recentDays) {
     const since = new Date();
     since.setDate(since.getDate() - Number(sp.recentDays));
     query = query.gte("updated_at", since.toISOString());
   }
 
-  if (sp.sort === "unit_cost_asc") {
-    query = query.order("unit_cost_per_100g", { ascending: true, nullsFirst: false });
-  } else if (sp.sort === "unit_cost_desc") {
-    query = query.order("unit_cost_per_100g", { ascending: false, nullsFirst: false });
-  } else {
-    query = query.order("updated_at", { ascending: false });
+  switch (sp.sort) {
+    case "unit_cost_asc":
+      query = query.order("unit_cost_per_100g", { ascending: true, nullsFirst: false });
+      break;
+    case "unit_cost_desc":
+      query = query.order("unit_cost_per_100g", { ascending: false, nullsFirst: false });
+      break;
+    case "origin_asc":
+      query = query.order("origin", { ascending: true, nullsFirst: false });
+      break;
+    case "origin_desc":
+      query = query.order("origin", { ascending: false, nullsFirst: false });
+      break;
+    case "grade_asc":
+      query = query.order("grade", { ascending: true, nullsFirst: false });
+      break;
+    case "grade_desc":
+      query = query.order("grade", { ascending: false, nullsFirst: false });
+      break;
+    case "yield_asc":
+      query = query.order("yield_rate", { ascending: true, nullsFirst: false });
+      break;
+    case "yield_desc":
+      query = query.order("yield_rate", { ascending: false, nullsFirst: false });
+      break;
+    default:
+      query = query.order("updated_at", { ascending: false });
   }
 
   const { data: products } = await query;
+
+  const productIds = (products ?? []).map((p) => p.id);
+  const latestHistoryByProduct = new Map<
+    string,
+    Pick<PriceHistory, "previous_price" | "changed_price" | "price_diff" | "changed_date">
+  >();
+  if (productIds.length > 0) {
+    const { data: histories } = await supabase
+      .from("price_history")
+      .select("product_id, previous_price, changed_price, price_diff, changed_date, created_at")
+      .in("product_id", productIds)
+      .order("changed_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    for (const h of histories ?? []) {
+      if (!latestHistoryByProduct.has(h.product_id)) {
+        latestHistoryByProduct.set(h.product_id, h);
+      }
+    }
+  }
 
   const buildHref = (overrides: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
@@ -63,7 +115,7 @@ export default async function ProductsPage({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[1800px] mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-neutral-900">원물/제품 목록</h1>
         <div className="flex items-center gap-2">
@@ -125,6 +177,27 @@ export default async function ProductsPage({
         <FilterField label="등급">
           <input name="grade" defaultValue={sp.grade ?? ""} className="filter-input" />
         </FilterField>
+        <FilterField label="수율(%)">
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step="0.01"
+              name="yieldMin"
+              placeholder="최소"
+              defaultValue={sp.yieldMin ?? ""}
+              className="filter-input w-20"
+            />
+            <span className="text-neutral-400">~</span>
+            <input
+              type="number"
+              step="0.01"
+              name="yieldMax"
+              placeholder="최대"
+              defaultValue={sp.yieldMax ?? ""}
+              className="filter-input w-20"
+            />
+          </div>
+        </FilterField>
         <FilterField label="거래상태">
           <select name="status" defaultValue={sp.status ?? ""} className="filter-input">
             <option value="">전체</option>
@@ -137,6 +210,12 @@ export default async function ProductsPage({
             <option value="">최근 업데이트순</option>
             <option value="unit_cost_asc">100g당 원가 낮은순</option>
             <option value="unit_cost_desc">100g당 원가 높은순</option>
+            <option value="origin_asc">원산지 오름차순 (가나다)</option>
+            <option value="origin_desc">원산지 내림차순</option>
+            <option value="grade_asc">등급 오름차순 (가나다)</option>
+            <option value="grade_desc">등급 내림차순</option>
+            <option value="yield_asc">수율 낮은순</option>
+            <option value="yield_desc">수율 높은순</option>
           </select>
         </FilterField>
         <FilterField label="최근 변동">
@@ -156,15 +235,26 @@ export default async function ProductsPage({
       </form>
 
       <div className="rounded-lg border border-neutral-200 bg-white overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="min-w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
               <th className="px-4 py-2 font-medium">제품명</th>
               <th className="px-4 py-2 font-medium">카테고리</th>
               <th className="px-4 py-2 font-medium">거래처</th>
               <th className="px-4 py-2 font-medium">원산지</th>
+              <th className="px-4 py-2 font-medium">특성</th>
+              <th className="px-4 py-2 font-medium">원물사이즈</th>
               <th className="px-4 py-2 font-medium">등급</th>
+              <th className="px-4 py-2 font-medium text-right">매입가</th>
+              <th className="px-4 py-2 font-medium text-right">매입중량</th>
+              <th className="px-4 py-2 font-medium text-right">수율</th>
+              <th className="px-4 py-2 font-medium text-right">보존중량</th>
               <th className="px-4 py-2 font-medium text-right">100g당 원가</th>
+              <th className="px-4 py-2 font-medium text-right">이전단가</th>
+              <th className="px-4 py-2 font-medium text-right">변동단가</th>
+              <th className="px-4 py-2 font-medium text-right">상승단가</th>
+              <th className="px-4 py-2 font-medium text-right">변동차액</th>
+              <th className="px-4 py-2 font-medium">입고일</th>
               <th className="px-4 py-2 font-medium">상태</th>
               <th className="px-4 py-2 font-medium">업데이트</th>
             </tr>
@@ -172,44 +262,96 @@ export default async function ProductsPage({
           <tbody>
             {(products ?? []).length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-neutral-400">
+                <td colSpan={19} className="px-4 py-10 text-center text-neutral-400">
                   조건에 맞는 원물/제품이 없습니다.
                 </td>
               </tr>
             )}
-            {(products ?? []).map((p) => (
-              <tr key={p.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                <td className="px-4 py-2">
-                  <Link href={`/products/${p.id}`} className="font-medium text-neutral-900 hover:underline">
-                    {p.product_name}
-                  </Link>
-                </td>
-                <td className="px-4 py-2 text-neutral-600">{p.category?.name ?? "-"}</td>
-                <td className="px-4 py-2 text-neutral-600">{p.supplier?.name ?? "-"}</td>
-                <td className="px-4 py-2 text-neutral-600">{p.origin ?? "-"}</td>
-                <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
-                <td className="px-4 py-2 text-right font-medium">{formatUnitCost(p.unit_cost_per_100g)} 원</td>
-                <td className="px-4 py-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      p.status === "거래중"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-neutral-200 text-neutral-600"
+            {(products ?? []).map((p) => {
+              const history = latestHistoryByProduct.get(p.id);
+              const previousUnitCost = history
+                ? calcUnitCostPer100g(history.previous_price ?? 0, p.purchase_weight, p.yield_rate)
+                : null;
+              const currentUnitCost = p.unit_cost_per_100g;
+              const unitCostRise =
+                history && previousUnitCost !== null && currentUnitCost !== null
+                  ? Math.round((currentUnitCost - previousUnitCost) * 100) / 100
+                  : null;
+              const priceDiff = history?.price_diff ?? null;
+
+              return (
+                <tr key={p.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
+                  <td className="px-4 py-2">
+                    <Link href={`/products/${p.id}`} className="font-medium text-neutral-900 hover:underline">
+                      {p.product_name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2 text-neutral-600">{p.category?.name ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-600">{p.supplier?.name ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-600">{p.origin ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-600">{p.spec ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-600">{p.size ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
+                  <td className="px-4 py-2 text-right">{formatKRW(p.purchase_price)} 원</td>
+                  <td className="px-4 py-2 text-right">{formatKRW(p.purchase_weight)} g</td>
+                  <td className="px-4 py-2 text-right">{p.yield_rate !== null ? `${p.yield_rate}%` : "-"}</td>
+                  <td className="px-4 py-2 text-right">{formatKRW(p.preserved_weight)} g</td>
+                  <td className="px-4 py-2 text-right font-medium">{formatUnitCost(p.unit_cost_per_100g)} 원</td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {history ? `${formatUnitCost(previousUnitCost)} 원` : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">
+                    {history ? `${formatUnitCost(currentUnitCost)} 원` : "-"}
+                  </td>
+                  <td
+                    className={`px-4 py-2 text-right ${
+                      unitCostRise !== null && unitCostRise > 0
+                        ? "text-red-600"
+                        : unitCostRise !== null && unitCostRise < 0
+                          ? "text-blue-600"
+                          : "text-neutral-500"
                     }`}
                   >
-                    {p.status}
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                  {new Date(p.updated_at).toLocaleDateString("ko-KR")}
-                </td>
-              </tr>
-            ))}
+                    {formatSignedUnitCost(unitCostRise)} 원
+                  </td>
+                  <td
+                    className={`px-4 py-2 text-right ${
+                      priceDiff !== null && priceDiff > 0
+                        ? "text-red-600"
+                        : priceDiff !== null && priceDiff < 0
+                          ? "text-blue-600"
+                          : "text-neutral-500"
+                    }`}
+                  >
+                    {formatSignedKRW(priceDiff)} 원
+                  </td>
+                  <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
+                    {history ? new Date(history.changed_date).toLocaleDateString("ko-KR") : "-"}
+                  </td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        p.status === "거래중"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-neutral-200 text-neutral-600"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
+                    {new Date(p.updated_at).toLocaleDateString("ko-KR")}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       <p className="text-xs text-neutral-400">
-        금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다.
+        금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다. 이전단가/변동단가/상승단가는
+        최근 매입가 변동 시점의 100g당 단가 기준이며, 변동차액은 매입가(원) 자체의 증감액입니다. 변동 이력이 없는 제품은
+        &quot;-&quot;로 표시됩니다.
       </p>
     </div>
   );

@@ -34,6 +34,13 @@ export default async function ProductDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <Link
+        href="/products"
+        className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-800"
+      >
+        ← 목록으로
+      </Link>
+
       <div className="flex items-start justify-between">
         <div>
           <div className="text-sm text-neutral-500">{product.category?.name ?? "-"}</div>
