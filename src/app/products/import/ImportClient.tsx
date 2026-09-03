@@ -123,6 +123,7 @@ export default function ImportClient() {
                     <th className="px-3 py-2 font-medium">카테고리</th>
                     <th className="px-3 py-2 font-medium">거래처</th>
                     <th className="px-3 py-2 font-medium">제품명</th>
+                    <th className="px-3 py-2 font-medium">구매유형</th>
                     <th className="px-3 py-2 font-medium text-right">매입가</th>
                     <th className="px-3 py-2 font-medium text-right">매입중량</th>
                     <th className="px-3 py-2 font-medium">상태</th>
@@ -135,8 +136,21 @@ export default function ImportClient() {
                       <td className="px-3 py-2">{r.category_name}</td>
                       <td className="px-3 py-2">{r.supplier_name}</td>
                       <td className="px-3 py-2 font-medium">{r.product_name}</td>
-                      <td className="px-3 py-2 text-right">{formatKRW(r.purchase_price)} 원</td>
-                      <td className="px-3 py-2 text-right">{formatKRW(r.purchase_weight)} g</td>
+                      <td className="px-3 py-2">
+                        {r.purchase_type === "해외직구매" ? (
+                          <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium whitespace-nowrap">
+                            해외직구매
+                          </span>
+                        ) : (
+                          "국내구매"
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        {formatKRW(r.purchase_price)} 원
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        {formatKRW(r.purchase_weight)} g
+                      </td>
                       <td className="px-3 py-2">{r.status}</td>
                     </tr>
                   ))}

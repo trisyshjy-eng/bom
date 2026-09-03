@@ -4,13 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { calcOverseasTotalPrice, calcOverseasTotalWeight } from "@/lib/calc";
+import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
 import type { PurchaseType } from "@/lib/types";
 
 export interface ProductFormState {
   error: string | null;
 }
-
-const OVERSEAS_PRODUCT_NAME = "쭈꾸미";
 
 async function resolveSupplierId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -69,8 +68,8 @@ export async function saveProduct(
   if (!productName) return { error: "제품명을 입력하세요." };
 
   const purchaseType: PurchaseType = purchaseTypeRaw === "해외직구매" ? "해외직구매" : "국내구매";
-  if (purchaseType === "해외직구매" && productName !== OVERSEAS_PRODUCT_NAME) {
-    return { error: `해외직구매는 '${OVERSEAS_PRODUCT_NAME}' 제품만 등록할 수 있습니다.` };
+  if (purchaseType === "해외직구매" && !isOverseasPurchaseEligible(productName)) {
+    return { error: "해외직구매는 '쭈꾸미'(주꾸미) 제품만 등록할 수 있습니다." };
   }
 
   const yieldRate = yieldRateRaw === "" ? null : Number(yieldRateRaw);

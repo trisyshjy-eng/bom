@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCategoryLabels } from "@/lib/category-config";
 import { formatKRW, formatUnitCost } from "@/lib/calc";
+import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
 import PriceHistoryChart from "./PriceHistoryChart";
 import NoteCell from "./NoteCell";
 
@@ -73,7 +74,7 @@ export default async function ProductDetailPage({
         <InfoItem label="등급" value={product.grade ?? "-"} />
       </div>
 
-      {product.product_name === "쭈꾸미" && (
+      {isOverseasPurchaseEligible(product.product_name) && (
         <div className="rounded-lg border border-neutral-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <InfoItem label="구매유형" value={product.purchase_type} />
           {product.purchase_type === "해외직구매" && (

@@ -8,6 +8,7 @@ import {
   formatSignedUnitCost,
 } from "@/lib/calc";
 import type { PriceHistory } from "@/lib/types";
+import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
 
 interface SearchParams {
   category?: string;
@@ -298,7 +299,7 @@ export default async function ProductsPage({
                   <td className="px-4 py-2 text-neutral-600">{p.size ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
                   <td className="px-4 py-2">
-                    {p.product_name === "쭈꾸미" ? (
+                    {isOverseasPurchaseEligible(p.product_name) ? (
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                           p.purchase_type === "해외직구매"
@@ -383,7 +384,7 @@ export default async function ProductsPage({
       <p className="text-xs text-neutral-400">
         금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다. 이전단가/변동단가/상승단가는
         최근 매입가 변동 시점의 100g당 단가 기준이며, 변동차액은 매입가(원) 자체의 증감액입니다. 변동 이력이 없는 제품은
-        &quot;-&quot;로 표시됩니다. 쭈꾸미 해외직구매의 경우 매입가/매입중량은 계약단가×1box당중량×총박스수량×달러구매가로
+        &quot;-&quot;로 표시됩니다. 쭈꾸미(주꾸미) 해외직구매의 경우 매입가/매입중량은 계약단가×1box당중량×총박스수량×달러구매가로
         자동 계산된 값입니다.
       </p>
     </div>

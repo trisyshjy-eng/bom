@@ -12,9 +12,9 @@ import {
   formatUnitCost,
 } from "@/lib/calc";
 import { saveProduct, type ProductFormState } from "./actions";
+import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
 
 const NEW_SUPPLIER_VALUE = "__new__";
-const OVERSEAS_PRODUCT_NAME = "쭈꾸미";
 
 interface ProductFormProps {
   categories: Category[];
@@ -46,7 +46,7 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
   const categoryName = categories.find((c) => c.id === categoryId)?.name;
   const labels = useMemo(() => getCategoryLabels(categoryName), [categoryName]);
 
-  const isOverseasEligible = productName.trim() === OVERSEAS_PRODUCT_NAME;
+  const isOverseasEligible = isOverseasPurchaseEligible(productName);
   const isOverseas = isOverseasEligible && purchaseType === "해외직구매";
 
   const previewOverseasWeight = useMemo(() => {
