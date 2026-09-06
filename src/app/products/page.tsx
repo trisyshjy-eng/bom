@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  calcUnitCostPer100g,
-  formatKRW,
-  formatUnitCost,
-  formatSignedKRW,
-  formatSignedUnitCost,
-} from "@/lib/calc";
+import { calcUnitCostPer100g, formatKRW, formatUnitCost } from "@/lib/calc";
 import type { PriceHistory } from "@/lib/types";
 import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
 import DeleteProductButton from "./DeleteProductButton";
@@ -236,47 +230,41 @@ export default async function ProductsPage({
         </button>
       </form>
 
-      <div className="rounded-lg border border-neutral-200 bg-white overflow-x-auto">
+      <div className="rounded-lg border border-neutral-200 bg-white overflow-auto max-h-[70vh]">
         <table className="min-w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
-              <th className="sticky left-0 z-20 bg-white px-4 py-2 font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+              <th className="sticky left-0 top-0 z-30 bg-white px-4 py-2 font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                 제품명
               </th>
-              <th className="px-4 py-2 font-medium">카테고리</th>
-              <th className="px-4 py-2 font-medium">거래처</th>
-              <th className="px-4 py-2 font-medium">원산지</th>
-              <th className="px-4 py-2 font-medium">특성</th>
-              <th className="px-4 py-2 font-medium">원물사이즈</th>
-              <th className="px-4 py-2 font-medium">등급</th>
-              <th className="px-4 py-2 font-medium">발주일</th>
-              <th className="px-4 py-2 font-medium">입고일</th>
-              <th className="px-4 py-2 font-medium">구매유형</th>
-              <th className="px-4 py-2 font-medium text-right">매입가</th>
-              <th className="px-4 py-2 font-medium text-right">매입중량</th>
-              <th className="px-4 py-2 font-medium text-right">박스수량</th>
-              <th className="px-4 py-2 font-medium text-right">총매입가</th>
-              <th className="px-4 py-2 font-medium text-right">계약단가</th>
-              <th className="px-4 py-2 font-medium text-right">1box당중량</th>
-              <th className="px-4 py-2 font-medium text-right">총박스수량</th>
-              <th className="px-4 py-2 font-medium text-right">달러구매가</th>
-              <th className="px-4 py-2 font-medium text-right">수율</th>
-              <th className="px-4 py-2 font-medium text-right">보존중량</th>
-              <th className="px-4 py-2 font-medium text-right">100g당 원가</th>
-              <th className="px-4 py-2 font-medium text-right">이전단가</th>
-              <th className="px-4 py-2 font-medium text-right">변동단가</th>
-              <th className="px-4 py-2 font-medium text-right">상승단가</th>
-              <th className="px-4 py-2 font-medium text-right">변동차액</th>
-              <th className="px-4 py-2 font-medium">최근변동일</th>
-              <th className="px-4 py-2 font-medium">상태</th>
-              <th className="px-4 py-2 font-medium">업데이트</th>
-              <th className="px-4 py-2 font-medium">삭제</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">카테고리</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">거래처</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">원산지</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">특성</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">원물사이즈</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">등급</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">발주일</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">입고일</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">구매유형</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">매입가</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">매입중량</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">박스수량</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">총매입가</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">총박스수량</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">수율</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">보존중량</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">100g당 원가</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">이전단가</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium text-right">변동단가</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">상태</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">업데이트</th>
+              <th className="sticky top-0 z-20 bg-white px-4 py-2 font-medium">삭제</th>
             </tr>
           </thead>
           <tbody>
             {(products ?? []).length === 0 && (
               <tr>
-                <td colSpan={29} className="px-4 py-10 text-center text-neutral-400">
+                <td colSpan={23} className="px-4 py-10 text-center text-neutral-400">
                   조건에 맞는 원물/제품이 없습니다.
                 </td>
               </tr>
@@ -287,11 +275,6 @@ export default async function ProductsPage({
                 ? calcUnitCostPer100g(history.previous_price ?? 0, p.purchase_weight, p.yield_rate)
                 : null;
               const currentUnitCost = p.unit_cost_per_100g;
-              const unitCostRise =
-                history && previousUnitCost !== null && currentUnitCost !== null
-                  ? Math.round((currentUnitCost - previousUnitCost) * 100) / 100
-                  : null;
-              const priceDiff = history?.price_diff ?? null;
 
               return (
                 <tr
@@ -336,18 +319,7 @@ export default async function ProductsPage({
                   <td className="px-4 py-2 text-right font-medium">
                     {formatKRW(p.total_purchase_price)} 원
                   </td>
-                  <td className="px-4 py-2 text-right text-neutral-500">
-                    {p.purchase_type === "해외직구매" ? formatUnitCost(p.contract_unit_price) : "-"}
-                  </td>
-                  <td className="px-4 py-2 text-right text-neutral-500">
-                    {p.purchase_type === "해외직구매" ? `${formatKRW(p.box_weight)} g` : "-"}
-                  </td>
-                  <td className="px-4 py-2 text-right text-neutral-500">
-                    {p.purchase_type === "해외직구매" ? formatKRW(p.box_count) : "-"}
-                  </td>
-                  <td className="px-4 py-2 text-right text-neutral-500">
-                    {p.purchase_type === "해외직구매" ? formatUnitCost(p.usd_exchange_rate) : "-"}
-                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">{formatKRW(p.box_count)}</td>
                   <td className="px-4 py-2 text-right">{p.yield_rate !== null ? `${p.yield_rate}%` : "-"}</td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.preserved_weight)} g</td>
                   <td className="px-4 py-2 text-right font-medium">{formatUnitCost(p.unit_cost_per_100g)} 원</td>
@@ -356,31 +328,6 @@ export default async function ProductsPage({
                   </td>
                   <td className="px-4 py-2 text-right text-neutral-500">
                     {history ? `${formatUnitCost(currentUnitCost)} 원` : "-"}
-                  </td>
-                  <td
-                    className={`px-4 py-2 text-right ${
-                      unitCostRise !== null && unitCostRise > 0
-                        ? "text-red-600"
-                        : unitCostRise !== null && unitCostRise < 0
-                          ? "text-blue-600"
-                          : "text-neutral-500"
-                    }`}
-                  >
-                    {formatSignedUnitCost(unitCostRise)} 원
-                  </td>
-                  <td
-                    className={`px-4 py-2 text-right ${
-                      priceDiff !== null && priceDiff > 0
-                        ? "text-red-600"
-                        : priceDiff !== null && priceDiff < 0
-                          ? "text-blue-600"
-                          : "text-neutral-500"
-                    }`}
-                  >
-                    {formatSignedKRW(priceDiff)} 원
-                  </td>
-                  <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                    {history ? new Date(history.changed_date).toLocaleDateString("ko-KR") : "-"}
                   </td>
                   <td className="px-4 py-2">
                     <span
@@ -406,9 +353,9 @@ export default async function ProductsPage({
         </table>
       </div>
       <p className="text-xs text-neutral-400">
-        금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다. 이전단가/변동단가/상승단가는
-        최근 매입가 변동 시점의 100g당 단가 기준이며, 변동차액은 매입가(원) 자체의 증감액입니다. 변동 이력이 없는 제품은
-        &quot;-&quot;로 표시됩니다. 매입가/매입중량은 1box 기준이며, 총매입가는 매입가×박스수량으로 자동 계산됩니다(박스수량 미입력 시
+        금액은 {formatKRW(0)} 형식(천단위 콤마)으로 표기됩니다. 이전단가/변동단가는 최근 매입가 변동 시점의 100g당 단가
+        기준이며, 변동 이력이 없는 제품은 &quot;-&quot;로 표시됩니다. 매입가/매입중량은 1box 기준이며, 총매입가는
+        매입가×박스수량으로 자동 계산됩니다(박스수량 미입력 시
         매입가와 동일). 쭈꾸미(주꾸미) 해외직구매도 동일한 방식이며, 등록 화면의 계산기(총구매가격÷박스수량)로 1box매입가를
         구할 수 있습니다.
       </p>
