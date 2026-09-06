@@ -239,7 +239,9 @@ export default async function ProductsPage({
         <table className="min-w-full text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
-              <th className="px-4 py-2 font-medium">제품명</th>
+              <th className="sticky left-0 z-20 bg-white px-4 py-2 font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+                제품명
+              </th>
               <th className="px-4 py-2 font-medium">카테고리</th>
               <th className="px-4 py-2 font-medium">거래처</th>
               <th className="px-4 py-2 font-medium">원산지</th>
@@ -288,8 +290,11 @@ export default async function ProductsPage({
               const priceDiff = history?.price_diff ?? null;
 
               return (
-                <tr key={p.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                  <td className="px-4 py-2">
+                <tr
+                  key={p.id}
+                  className="group border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
+                >
+                  <td className="sticky left-0 z-10 bg-white px-4 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] group-hover:bg-neutral-50">
                     <Link href={`/products/${p.id}`} className="font-medium text-neutral-900 hover:underline">
                       {p.product_name}
                     </Link>
@@ -317,9 +322,7 @@ export default async function ProductsPage({
                   </td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.purchase_price)} 원</td>
                   <td className="px-4 py-2 text-right">{formatKRW(p.purchase_weight)} g</td>
-                  <td className="px-4 py-2 text-right text-neutral-500">
-                    {p.purchase_type === "국내구매" ? formatKRW(p.box_quantity) : "-"}
-                  </td>
+                  <td className="px-4 py-2 text-right text-neutral-500">{formatKRW(p.box_quantity)}</td>
                   <td className="px-4 py-2 text-right font-medium">
                     {formatKRW(p.total_purchase_price)} 원
                   </td>
@@ -392,9 +395,9 @@ export default async function ProductsPage({
       <p className="text-xs text-neutral-400">
         금액은 {formatKRW(0)} 형식(천단위 콤마), 100g당 원가는 소수점 둘째 자리까지 표기됩니다. 이전단가/변동단가/상승단가는
         최근 매입가 변동 시점의 100g당 단가 기준이며, 변동차액은 매입가(원) 자체의 증감액입니다. 변동 이력이 없는 제품은
-        &quot;-&quot;로 표시됩니다. 매입가는 1box 기준 단가이며, 총매입가는 매입가×박스수량으로 자동 계산됩니다(박스수량 미입력 시
-        매입가와 동일). 쭈꾸미(주꾸미) 해외직구매의 경우 매입가/매입중량은 계약단가×1box당중량×총박스수량×달러구매가로
-        자동 계산된 값입니다.
+        &quot;-&quot;로 표시됩니다. 매입가/매입중량은 1box 기준이며, 총매입가는 매입가×박스수량으로 자동 계산됩니다(박스수량 미입력 시
+        매입가와 동일). 쭈꾸미(주꾸미) 해외직구매도 동일한 방식이며, 등록 화면의 계산기(총구매가격÷박스수량)로 1box매입가를
+        구할 수 있습니다.
       </p>
     </div>
   );

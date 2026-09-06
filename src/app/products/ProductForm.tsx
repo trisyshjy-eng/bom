@@ -6,8 +6,7 @@ import { getCategoryLabels } from "@/lib/category-config";
 import {
   calcPreservedWeight,
   calcUnitCostPer100g,
-  calcOverseasTotalPrice,
-  calcOverseasTotalWeight,
+  calcUnitPriceFromTotal,
   calcTotalPurchasePrice,
   formatKRW,
   formatUnitCost,
@@ -36,14 +35,7 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
   const [yieldRate, setYieldRate] = useState(product?.yield_rate?.toString() ?? "");
 
   const [purchaseType, setPurchaseType] = useState<PurchaseType>(product?.purchase_type ?? "국내구매");
-  const [contractUnitPrice, setContractUnitPrice] = useState(
-    product?.contract_unit_price?.toString() ?? ""
-  );
-  const [boxWeight, setBoxWeight] = useState(product?.box_weight?.toString() ?? "");
-  const [boxCount, setBoxCount] = useState(product?.box_count?.toString() ?? "");
-  const [usdExchangeRate, setUsdExchangeRate] = useState(
-    product?.usd_exchange_rate?.toString() ?? ""
-  );
+  const [calcTotalPrice, setCalcTotalPrice] = useState("");
 
   const categoryName = categories.find((c) => c.id === categoryId)?.name;
   const labels = useMemo(() => getCategoryLabels(categoryName), [categoryName]);
@@ -51,47 +43,21 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
   const isOverseasEligible = isOverseasPurchaseEligible(productName);
   const isOverseas = isOverseasEligible && purchaseType === "해외직구매";
 
-  const previewOverseasWeight = useMemo(() => {
-    const w = Number(boxWeight);
-    const c = Number(boxCount);
-    if (Number.isNaN(w) || w <= 0 || Number.isNaN(c) || c <= 0) return null;
-    return calcOverseasTotalWeight(w, c);
-  }, [boxWeight, boxCount]);
-
-  const previewOverseasPrice = useMemo(() => {
-    const unit = Number(contractUnitPrice);
-    const w = Number(boxWeight);
-    const c = Number(boxCount);
-    const rate = Number(usdExchangeRate);
-    if (
-      Number.isNaN(unit) ||
-      unit < 0 ||
-      Number.isNaN(w) ||
-      w <= 0 ||
-      Number.isNaN(c) ||
-      c <= 0 ||
-      Number.isNaN(rate) ||
-      rate <= 0
-    )
-      return null;
-    return calcOverseasTotalPrice(unit, w, c, rate);
-  }, [contractUnitPrice, boxWeight, boxCount, usdExchangeRate]);
-
-  const effectivePrice = isOverseas ? previewOverseasPrice : Number(purchasePrice);
-  const effectiveWeight = isOverseas ? previewOverseasWeight : Number(purchaseWeight);
-
   const previewPreservedWeight = useMemo(() => {
-    if (effectiveWeight === null || Number.isNaN(effectiveWeight) || effectiveWeight <= 0) return null;
+    const w = Number(purchaseWeight);
+    if (Number.isNaN(w) || w <= 0) return null;
     const y = yieldRate === "" ? null : Number(yieldRate);
-    return calcPreservedWeight(effectiveWeight, y);
-  }, [effectiveWeight, yieldRate]);
+    return calcPreservedWeight(w, y);
+  }, [purchaseWeight, yieldRate]);
 
   const previewUnitCost = useMemo(() => {
-    if (effectivePrice === null || Number.isNaN(effectivePrice)) return null;
-    if (effectiveWeight === null || Number.isNaN(effectiveWeight) || effectiveWeight <= 0) return null;
+    const p = Number(purchasePrice);
+    const w = Number(purchaseWeight);
+    if (Number.isNaN(p)) return null;
+    if (Number.isNaN(w) || w <= 0) return null;
     const y = yieldRate === "" ? null : Number(yieldRate);
-    return calcUnitCostPer100g(effectivePrice, effectiveWeight, y);
-  }, [effectivePrice, effectiveWeight, yieldRate]);
+    return calcUnitCostPer100g(p, w, y);
+  }, [purchasePrice, purchaseWeight, yieldRate]);
 
   const previewTotalPurchasePrice = useMemo(() => {
     const p = Number(purchasePrice);
@@ -100,6 +66,14 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
     if (qty !== null && (Number.isNaN(qty) || qty <= 0)) return null;
     return calcTotalPurchasePrice(p, qty);
   }, [purchasePrice, boxQuantity]);
+
+  const handleCalcUnitPrice = () => {
+    const total = Number(calcTotalPrice);
+    const qty = Number(boxQuantity);
+    if (Number.isNaN(total) || total <= 0) return;
+    if (Number.isNaN(qty) || qty <= 0) return;
+    setPurchasePrice(String(calcUnitPriceFromTotal(total, qty)));
+  };
 
   return (
     <form action={formAction} className="space-y-6">
@@ -235,97 +209,84 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
           </div>
         )}
 
-        {isOverseas ? (
-          <>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">계약단가</label>
-              <input
-                type="number"
-                step="0.01"
-                name="contract_unit_price"
-                value={contractUnitPrice}
-                onChange={(e) => setContractUnitPrice(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
+        {isOverseas && (
+          <div className="sm:col-span-2 space-y-3 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-3">
+            <div className="text-xs font-medium text-neutral-500">
+              1BOX매입가 계산기 (총구매가격 ÷ 박스수량, 선택 입력)
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">1box당 중량</label>
-              <input
-                type="number"
-                step="0.01"
-                name="box_weight"
-                value={boxWeight}
-                onChange={(e) => setBoxWeight(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-neutral-500">총구매가격</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={calcTotalPrice}
+                  onChange={(e) => setCalcTotalPrice(e.target.value)}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-neutral-500">박스수량</label>
+                <input
+                  type="number"
+                  step="1"
+                  value={boxQuantity}
+                  onChange={(e) => setBoxQuantity(e.target.value)}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">총박스수량</label>
-              <input
-                type="number"
-                step="1"
-                name="box_count"
-                value={boxCount}
-                onChange={(e) => setBoxCount(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">달러구매가</label>
-              <input
-                type="number"
-                step="0.0001"
-                name="usd_exchange_rate"
-                value={usdExchangeRate}
-                onChange={(e) => setUsdExchangeRate(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">{labels.purchasePriceLabel}</label>
-              <input
-                type="number"
-                step="0.01"
-                name="purchase_price"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">{labels.purchaseWeightLabel}</label>
-              <input
-                type="number"
-                step="0.01"
-                name="purchase_weight"
-                value={purchaseWeight}
-                onChange={(e) => setPurchaseWeight(e.target.value)}
-                required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-neutral-700">박스수량</label>
-              <input
-                type="number"
-                step="1"
-                name="box_quantity"
-                value={boxQuantity}
-                onChange={(e) => setBoxQuantity(e.target.value)}
-                placeholder="미입력 시 1로 계산"
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-              />
-            </div>
-          </>
+            <button
+              type="button"
+              onClick={handleCalcUnitPrice}
+              className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
+            >
+              1BOX매입가 계산해서 채우기
+            </button>
+          </div>
         )}
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">
+            {isOverseas ? "1BOX매입가(원)" : labels.purchasePriceLabel}
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="purchase_price"
+            value={purchasePrice}
+            onChange={(e) => setPurchasePrice(e.target.value)}
+            required
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">
+            {isOverseas ? "1BOX매입중량(G)" : labels.purchaseWeightLabel}
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="purchase_weight"
+            value={purchaseWeight}
+            onChange={(e) => setPurchaseWeight(e.target.value)}
+            required
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">박스수량</label>
+          <input
+            type="number"
+            step="1"
+            name="box_quantity"
+            value={boxQuantity}
+            onChange={(e) => setBoxQuantity(e.target.value)}
+            required={isOverseas}
+            placeholder={isOverseas ? undefined : "미입력 시 1로 계산"}
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
 
         <div className="space-y-1">
           <label className="text-sm font-medium text-neutral-700">{labels.yieldRateLabel}</label>
@@ -341,34 +302,15 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
       </div>
 
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 grid grid-cols-2 gap-4">
-        {isOverseas && (
-          <>
-            <div>
-              <div className="text-xs text-neutral-500">총매입중량 (자동계산)</div>
-              <div className="text-lg font-semibold text-neutral-900">
-                {previewOverseasWeight !== null ? `${formatKRW(previewOverseasWeight)} g` : "-"}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-neutral-500">총구매가격 (자동계산)</div>
-              <div className="text-lg font-semibold text-neutral-900">
-                {previewOverseasPrice !== null ? `${formatKRW(previewOverseasPrice)} 원` : "-"}
-              </div>
-              <div className="text-[11px] text-neutral-400 mt-0.5">
-                계약단가 × 1box당중량 × 총박스수량 × 달러구매가
-              </div>
-            </div>
-          </>
-        )}
-        {!isOverseas && (
-          <div>
-            <div className="text-xs text-neutral-500">총매입가 (자동계산)</div>
-            <div className="text-lg font-semibold text-neutral-900">
-              {previewTotalPurchasePrice !== null ? `${formatKRW(previewTotalPurchasePrice)} 원` : "-"}
-            </div>
-            <div className="text-[11px] text-neutral-400 mt-0.5">{labels.purchasePriceLabel} × 박스수량</div>
+        <div>
+          <div className="text-xs text-neutral-500">총매입가 (자동계산)</div>
+          <div className="text-lg font-semibold text-neutral-900">
+            {previewTotalPurchasePrice !== null ? `${formatKRW(previewTotalPurchasePrice)} 원` : "-"}
           </div>
-        )}
+          <div className="text-[11px] text-neutral-400 mt-0.5">
+            {isOverseas ? "1BOX매입가(원)" : labels.purchasePriceLabel} × 박스수량
+          </div>
+        </div>
         <div>
           <div className="text-xs text-neutral-500">보존중량 (자동계산)</div>
           <div className="text-lg font-semibold text-neutral-900">

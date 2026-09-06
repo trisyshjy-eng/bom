@@ -33,6 +33,11 @@ export function calcOverseasTotalWeight(boxWeight: number, boxCount: number): nu
   return Math.round(boxWeight * boxCount * 100) / 100;
 }
 
+// 총구매가격(원) ÷ 박스수량 = 1box당 매입가(원)
+export function calcUnitPriceFromTotal(totalPrice: number, boxQuantity: number): number {
+  return Math.round((totalPrice / boxQuantity) * 100) / 100;
+}
+
 // 매입가는 1box 기준 단가이므로 박스수량을 곱해 총매입가를 계산한다 (박스수량 미입력 시 매입가와 동일).
 export function calcTotalPurchasePrice(
   purchasePrice: number,
