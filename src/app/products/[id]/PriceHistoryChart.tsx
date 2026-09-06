@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { PriceHistory } from "@/lib/types";
+import { formatUnitCost } from "@/lib/calc";
 
 interface ChartPoint {
   date: string;
@@ -53,7 +54,7 @@ export default function PriceHistoryChart({
           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} width={60} />
           <Tooltip
-            formatter={(value) => [`${Number(value).toFixed(2)} 원`, "100g당 원가"]}
+            formatter={(value) => [`${formatUnitCost(Number(value))} 원`, "100g당 원가"]}
           />
           <Line type="monotone" dataKey="unitCost" stroke="#171717" strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>

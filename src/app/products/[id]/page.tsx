@@ -72,6 +72,16 @@ export default async function ProductDetailPage({
         <InfoItem label={labels.specLabel} value={product.spec ?? "-"} />
         <InfoItem label="사이즈" value={product.size ?? "-"} />
         <InfoItem label="등급" value={product.grade ?? "-"} />
+        <InfoItem
+          label="발주일"
+          value={product.order_date ? new Date(product.order_date).toLocaleDateString("ko-KR") : "-"}
+        />
+        <InfoItem
+          label="입고일"
+          value={
+            product.received_date ? new Date(product.received_date).toLocaleDateString("ko-KR") : "-"
+          }
+        />
       </div>
 
       {isOverseasPurchaseEligible(product.product_name) && (

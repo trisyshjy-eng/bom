@@ -9,6 +9,7 @@ import {
 } from "@/lib/calc";
 import type { PriceHistory } from "@/lib/types";
 import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
+import DeleteProductButton from "./DeleteProductButton";
 
 interface SearchParams {
   category?: string;
@@ -248,6 +249,8 @@ export default async function ProductsPage({
               <th className="px-4 py-2 font-medium">특성</th>
               <th className="px-4 py-2 font-medium">원물사이즈</th>
               <th className="px-4 py-2 font-medium">등급</th>
+              <th className="px-4 py-2 font-medium">발주일</th>
+              <th className="px-4 py-2 font-medium">입고일</th>
               <th className="px-4 py-2 font-medium">구매유형</th>
               <th className="px-4 py-2 font-medium text-right">매입가</th>
               <th className="px-4 py-2 font-medium text-right">매입중량</th>
@@ -264,15 +267,16 @@ export default async function ProductsPage({
               <th className="px-4 py-2 font-medium text-right">변동단가</th>
               <th className="px-4 py-2 font-medium text-right">상승단가</th>
               <th className="px-4 py-2 font-medium text-right">변동차액</th>
-              <th className="px-4 py-2 font-medium">입고일</th>
+              <th className="px-4 py-2 font-medium">최근변동일</th>
               <th className="px-4 py-2 font-medium">상태</th>
               <th className="px-4 py-2 font-medium">업데이트</th>
+              <th className="px-4 py-2 font-medium">삭제</th>
             </tr>
           </thead>
           <tbody>
             {(products ?? []).length === 0 && (
               <tr>
-                <td colSpan={26} className="px-4 py-10 text-center text-neutral-400">
+                <td colSpan={29} className="px-4 py-10 text-center text-neutral-400">
                   조건에 맞는 원물/제품이 없습니다.
                 </td>
               </tr>
@@ -305,6 +309,12 @@ export default async function ProductsPage({
                   <td className="px-4 py-2 text-neutral-600">{p.spec ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.size ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
+                  <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
+                    {p.order_date ? new Date(p.order_date).toLocaleDateString("ko-KR") : "-"}
+                  </td>
+                  <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
+                    {p.received_date ? new Date(p.received_date).toLocaleDateString("ko-KR") : "-"}
+                  </td>
                   <td className="px-4 py-2">
                     {isOverseasPurchaseEligible(p.product_name) ? (
                       <span
@@ -385,6 +395,9 @@ export default async function ProductsPage({
                   </td>
                   <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
                     {new Date(p.updated_at).toLocaleDateString("ko-KR")}
+                  </td>
+                  <td className="px-4 py-2">
+                    <DeleteProductButton productId={p.id} />
                   </td>
                 </tr>
               );

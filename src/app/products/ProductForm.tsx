@@ -183,6 +183,26 @@ export default function ProductForm({ categories, suppliers, product }: ProductF
         </div>
 
         <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">발주일</label>
+          <input
+            type="date"
+            name="order_date"
+            defaultValue={product?.order_date ?? ""}
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">입고일</label>
+          <input
+            type="date"
+            name="received_date"
+            defaultValue={product?.received_date ?? ""}
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="space-y-1">
           <label className="text-sm font-medium text-neutral-700">거래지속상황</label>
           <select
             name="status"

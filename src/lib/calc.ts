@@ -57,12 +57,12 @@ export function calcPriceDiff(
 
 export function formatKRW(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "-";
-  return new Intl.NumberFormat("ko-KR").format(value);
+  return new Intl.NumberFormat("ko-KR").format(Math.round(value));
 }
 
 export function formatUnitCost(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "-";
-  return value.toFixed(2);
+  return formatKRW(Math.round(value));
 }
 
 export function formatSignedKRW(value: number | null | undefined): string {

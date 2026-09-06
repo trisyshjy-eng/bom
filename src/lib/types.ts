@@ -27,6 +27,8 @@ export interface Product {
   purchase_weight: number;
   yield_rate: number | null;
   box_quantity: number | null;
+  order_date: string | null;
+  received_date: string | null;
   total_purchase_price: number;
   preserved_weight: number;
   unit_cost_per_100g: number | null;

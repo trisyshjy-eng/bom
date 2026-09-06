@@ -59,6 +59,8 @@ export async function saveProduct(
   const spec = String(formData.get("spec") ?? "").trim() || null;
   const size = String(formData.get("size") ?? "").trim() || null;
   const grade = String(formData.get("grade") ?? "").trim() || null;
+  const orderDate = String(formData.get("order_date") ?? "").trim() || null;
+  const receivedDate = String(formData.get("received_date") ?? "").trim() || null;
   const yieldRateRaw = String(formData.get("yield_rate") ?? "").trim();
   const status = String(formData.get("status") ?? "거래중");
   const purchaseTypeRaw = String(formData.get("purchase_type") ?? "국내구매");
@@ -117,6 +119,8 @@ export async function saveProduct(
     purchase_price: purchasePrice,
     purchase_weight: purchaseWeight,
     box_quantity: boxQuantity,
+    order_date: orderDate,
+    received_date: receivedDate,
     yield_rate: yieldRate,
     purchase_type: purchaseType,
     contract_unit_price: null,
@@ -142,6 +146,23 @@ export async function saveProduct(
   revalidatePath(`/products/${savedId}`);
   revalidatePath("/");
   redirect(`/products/${savedId}`);
+}
+
+export async function deleteProduct(productId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "로그인이 필요합니다." };
+
+  const { error } = await supabase.from("products").delete().eq("id", productId);
+  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/products");
+  revalidatePath("/");
+  return { error: null };
 }
 
 export async function updatePriceHistoryNote(historyId: string, note: string) {
