@@ -16,6 +16,8 @@ interface SearchParams {
   recentDays?: string;
   yieldMin?: string;
   yieldMax?: string;
+  receivedYear?: string;
+  receivedMonth?: string;
 }
 
 export default async function ProductsPage({
@@ -47,6 +49,17 @@ export default async function ProductsPage({
     const since = new Date();
     since.setDate(since.getDate() - Number(sp.recentDays));
     query = query.gte("updated_at", since.toISOString());
+  }
+  if (sp.receivedYear) {
+    const year = Number(sp.receivedYear);
+    const month = sp.receivedMonth ? Number(sp.receivedMonth) : null;
+    const startYear = month ? year : year;
+    const startMonth = month ? month - 1 : 0;
+    const start = new Date(startYear, startMonth, 1);
+    const end = month ? new Date(year, month, 1) : new Date(year + 1, 0, 1);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    query = query.gte("received_date", fmt(start)).lt("received_date", fmt(end));
   }
 
   switch (sp.sort) {
@@ -80,6 +93,11 @@ export default async function ProductsPage({
 
   const { data: products } = await query;
 
+  const totalPurchasePriceSum = (products ?? []).reduce(
+    (sum, p) => sum + (p.total_purchase_price ?? 0),
+    0
+  );
+
   const productIds = (products ?? []).map((p) => p.id);
   const latestHistoryByProduct = new Map<
     string,
@@ -99,6 +117,9 @@ export default async function ProductsPage({
       }
     }
   }
+
+  const currentYear = new Date().getFullYear();
+  const receivedYearOptions = Array.from({ length: 9 }, (_, i) => currentYear - i);
 
   const buildHref = (overrides: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
@@ -194,6 +215,26 @@ export default async function ProductsPage({
             />
           </div>
         </FilterField>
+        <FilterField label="입고일(년/월)">
+          <div className="flex items-center gap-1">
+            <select name="receivedYear" defaultValue={sp.receivedYear ?? ""} className="filter-input">
+              <option value="">전체</option>
+              {receivedYearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}년
+                </option>
+              ))}
+            </select>
+            <select name="receivedMonth" defaultValue={sp.receivedMonth ?? ""} className="filter-input">
+              <option value="">전체</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>
+                  {m}월
+                </option>
+              ))}
+            </select>
+          </div>
+        </FilterField>
         <FilterField label="거래상태">
           <select name="status" defaultValue={sp.status ?? ""} className="filter-input">
             <option value="">전체</option>
@@ -229,6 +270,13 @@ export default async function ProductsPage({
           필터 적용
         </button>
       </form>
+
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-neutral-500">총 {(products ?? []).length}건</span>
+        <span className="font-medium text-neutral-900">
+          총매입가 합계: {formatKRW(totalPurchasePriceSum)} 원
+        </span>
+      </div>
 
       <div className="rounded-lg border border-neutral-200 bg-white overflow-auto max-h-[70vh]">
         <table className="min-w-full text-sm whitespace-nowrap">
@@ -350,6 +398,18 @@ export default async function ProductsPage({
               );
             })}
           </tbody>
+          {(products ?? []).length > 0 && (
+            <tfoot>
+              <tr className="border-t-2 border-neutral-300 bg-neutral-50 font-medium">
+                <td className="sticky left-0 z-10 bg-neutral-50 px-4 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+                  합계
+                </td>
+                <td className="px-4 py-2" colSpan={12} />
+                <td className="px-4 py-2 text-right">{formatKRW(totalPurchasePriceSum)} 원</td>
+                <td className="px-4 py-2" colSpan={9} />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       <p className="text-xs text-neutral-400">
