@@ -97,6 +97,7 @@ export default async function ProductsPage({
     (sum, p) => sum + (p.total_purchase_price ?? 0),
     0
   );
+  const boxQuantitySum = (products ?? []).reduce((sum, p) => sum + (p.box_quantity ?? 0), 0);
 
   const productIds = (products ?? []).map((p) => p.id);
   const latestHistoryByProduct = new Map<
@@ -273,8 +274,9 @@ export default async function ProductsPage({
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-neutral-500">총 {(products ?? []).length}건</span>
-        <span className="font-medium text-neutral-900">
-          총매입가 합계: {formatKRW(totalPurchasePriceSum)} 원
+        <span className="font-medium text-neutral-900 flex items-center gap-4">
+          <span>박스수량 합계: {formatKRW(boxQuantitySum)}</span>
+          <span>총매입가 합계: {formatKRW(totalPurchasePriceSum)} 원</span>
         </span>
       </div>
 
@@ -404,7 +406,8 @@ export default async function ProductsPage({
                 <td className="sticky left-0 z-10 bg-neutral-50 px-4 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                   합계
                 </td>
-                <td className="px-4 py-2" colSpan={12} />
+                <td className="px-4 py-2" colSpan={11} />
+                <td className="px-4 py-2 text-right">{formatKRW(boxQuantitySum)}</td>
                 <td className="px-4 py-2 text-right">{formatKRW(totalPurchasePriceSum)} 원</td>
                 <td className="px-4 py-2" colSpan={9} />
               </tr>
