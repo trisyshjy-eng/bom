@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatKRW, formatUnitCost } from "@/lib/calc";
+import { formatDateKST } from "@/lib/date";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -107,7 +108,7 @@ export default async function DashboardPage() {
                 <div>
                   <div className="text-sm font-medium text-neutral-900">{p.product_name}</div>
                   <div className="text-xs text-neutral-400">
-                    {p.category?.name} · {new Date(p.updated_at).toLocaleDateString("ko-KR")}
+                    {p.category?.name} · {formatDateKST(p.updated_at)}
                   </div>
                 </div>
                 <div className="text-sm text-neutral-600">

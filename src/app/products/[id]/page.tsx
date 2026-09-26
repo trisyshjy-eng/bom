@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCategoryLabels } from "@/lib/category-config";
 import { formatKRW, formatUnitCost } from "@/lib/calc";
 import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
+import { formatDateKST, formatDateTimeKST } from "@/lib/date";
 import PriceHistoryChart from "./PriceHistoryChart";
 import NoteCell from "./NoteCell";
 
@@ -74,12 +75,12 @@ export default async function ProductDetailPage({
         <InfoItem label="등급" value={product.grade ?? "-"} />
         <InfoItem
           label="발주일"
-          value={product.order_date ? new Date(product.order_date).toLocaleDateString("ko-KR") : "-"}
+          value={product.order_date ? formatDateKST(product.order_date) : "-"}
         />
         <InfoItem
           label="입고일"
           value={
-            product.received_date ? new Date(product.received_date).toLocaleDateString("ko-KR") : "-"
+            product.received_date ? formatDateKST(product.received_date) : "-"
           }
         />
       </div>
@@ -113,7 +114,7 @@ export default async function ProductDetailPage({
           highlight
         />
         <InfoItem label="최종작성자" value={product.last_editor ?? "-"} />
-        <InfoItem label="업데이트 일자" value={new Date(product.updated_at).toLocaleString("ko-KR")} />
+        <InfoItem label="업데이트 일자" value={formatDateTimeKST(product.updated_at)} />
       </div>
 
       <section className="space-y-3">

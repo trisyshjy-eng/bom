@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAdminUser, isAdminEmail } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateKST, formatDateTimeKST } from "@/lib/date";
 import DeleteUserButton from "./DeleteUserButton";
 
 export default async function AdminUsersPage() {
@@ -79,10 +80,10 @@ export default async function AdminUsersPage() {
                   {(u.user_metadata as { name?: string } | null)?.name ?? "-"}
                 </td>
                 <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                  {new Date(u.created_at).toLocaleDateString("ko-KR")}
+                  {formatDateKST(u.created_at)}
                 </td>
                 <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                  {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString("ko-KR") : "-"}
+                  {u.last_sign_in_at ? formatDateTimeKST(u.last_sign_in_at) : "-"}
                 </td>
                 <td className="px-4 py-2">
                   {isAdminEmail(u.email) && (

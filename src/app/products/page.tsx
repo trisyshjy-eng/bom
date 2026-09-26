@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calcUnitCostPer100g, formatKRW, formatUnitCost } from "@/lib/calc";
 import type { PriceHistory } from "@/lib/types";
 import { isOverseasPurchaseEligible } from "@/lib/overseas-purchase";
+import { currentYearKST, formatDateKST } from "@/lib/date";
 import DeleteProductButton from "./DeleteProductButton";
 
 interface SearchParams {
@@ -119,7 +120,7 @@ export default async function ProductsPage({
     }
   }
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = currentYearKST();
   const receivedYearOptions = Array.from({ length: 9 }, (_, i) => currentYear - i);
 
   const buildHref = (overrides: Record<string, string | undefined>) => {
@@ -343,10 +344,10 @@ export default async function ProductsPage({
                   <td className="px-4 py-2 text-neutral-600">{p.size ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-600">{p.grade ?? "-"}</td>
                   <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                    {p.order_date ? new Date(p.order_date).toLocaleDateString("ko-KR") : "-"}
+                    {p.order_date ? formatDateKST(p.order_date) : "-"}
                   </td>
                   <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                    {p.received_date ? new Date(p.received_date).toLocaleDateString("ko-KR") : "-"}
+                    {p.received_date ? formatDateKST(p.received_date) : "-"}
                   </td>
                   <td className="px-4 py-2">
                     {isOverseasPurchaseEligible(p.product_name) ? (
@@ -391,7 +392,7 @@ export default async function ProductsPage({
                     </span>
                   </td>
                   <td className="px-4 py-2 text-neutral-500 whitespace-nowrap">
-                    {new Date(p.updated_at).toLocaleDateString("ko-KR")}
+                    {formatDateKST(p.updated_at)}
                   </td>
                   <td className="px-4 py-2">
                     <DeleteProductButton productId={p.id} />
