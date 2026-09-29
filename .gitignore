@@ -43,3 +43,9 @@ db암호.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# cloudflare (opennextjs)
+.open-next/
+.wrangler/
+.dev.vars*
+cloudflare-env.d.ts
